@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>BET.CALC</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0f14; --surface:#161922; --surface2:#1e2330;
+  --border:#2a3045; --accent:#c8f135; --red:#ff4d6a;
+  --green:#c8f135; --yellow:#f1c135; --orange:#ff8c42;
+  --teal:#35d4f1; --text:#e8ecf5; --muted:#6b7a99;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; max-width:480px; margin:0 auto; padding:0 0 60px; }
+
+/* HEADER */
+.header { padding:28px 20px 16px; border-bottom:1px solid var(--border); }
+.header h1 { font-family:'Bebas Neue',sans-serif; font-size:38px; letter-spacing:2px; line-height:1; }
+.header h1 span { color:var(--accent); }
+.header p { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--muted); margin-top:4px; text-transform:uppercase; }
+
+/* SPORT STATS FILTER */
+.sport-stat-tabs { display:flex; gap:6px; margin:18px 20px 12px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+.sport-stat-tabs::-webkit-scrollbar { display:none; }
+.sstab {
+  flex-shrink:0; padding:6px 14px; border-radius:20px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--muted); font-family:'DM Mono',monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  cursor:pointer; transition:all 0.15s;
+}
+.sstab.active {
+  border-color:var(--accent); color:var(--accent);
+  background:rgba(200,241,53,0.08);
+}
+
+/* STATS */
+.stats { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); margin:0 20px; border-radius:14px; overflow:hidden; }
+.stat { background:var(--surface); padding:16px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.stat-val { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:1px; line-height:1; transition:all 0.2s; }
+.stat-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+.green{color:var(--green)} .red{color:var(--red)} .yellow{color:var(--yellow)} .orange{color:var(--orange)} .teal{color:var(--teal)}
+
+/* FORM */
+.form-wrap { margin:20px 20px 0; background:var(--surface); border-radius:14px; border:1px solid var(--border); padding:18px; }
+.form-title { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:14px; }
+.form-row { display:flex; gap:10px; margin-bottom:10px; }
+.input-group { flex:1; display:flex; flex-direction:column; gap:5px; }
+.input-group label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+input[type="text"], input[type="date"] {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:11px 12px;
+  font-family:'DM Mono',monospace; font-size:15px; color:var(--text);
+  outline:none; transition:border-color 0.2s; -webkit-appearance:none;
+}
+input[type="date"] { color-scheme:dark; }
+input[type="text"]:focus, input[type="date"]:focus { border-color:var(--accent); }
+
+/* SPORT PILLS (formulario) */
+.sport-pills { display:flex; gap:6px; flex-wrap:wrap; }
+.sport-pill {
+  padding:8px 14px; border-radius:20px; border:1px solid var(--border);
+  background:var(--surface2); color:var(--muted);
+  font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px;
+  cursor:pointer; transition:all 0.15s; user-select:none;
+}
+.sport-pill.active { border-color:var(--teal); color:var(--teal); background:rgba(53,212,241,0.1); }
+
+/* AUTOCOMPLETE */
+.autocomplete-wrap { position:relative; }
+.ac-list {
+  position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:99;
+  background:var(--surface2); border:1px solid var(--accent);
+  border-radius:8px; overflow:hidden; display:none;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.ac-list.open { display:block; }
+.ac-item {
+  padding:11px 14px; font-family:'DM Mono',monospace; font-size:13px;
+  color:var(--text); cursor:pointer; border-bottom:1px solid var(--border);
+  transition:background 0.1s;
+}
+.ac-item:last-child { border-bottom:none; }
+.ac-item:active { background:rgba(200,241,53,0.1); color:var(--accent); }
+
+/* PREVIEW & BUTTONS */
+.preview { background:var(--surface2); border-radius:8px; padding:10px 12px; font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); margin-bottom:10px; display:flex; justify-content:space-between; }
+.preview span { color:var(--accent); font-size:14px; }
+.result-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:12px; }
+.btn-result { padding:10px 4px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); font-family:'DM Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.sel-win      { background:rgba(200,241,53,0.12); border-color:var(--green);  color:var(--green)!important; }
+.sel-half-win { background:rgba(53,212,241,0.12); border-color:var(--teal);   color:var(--teal)!important; }
+.sel-pending  { background:rgba(241,193,53,0.12); border-color:var(--yellow); color:var(--yellow)!important; }
+.sel-half-loss{ background:rgba(255,140,66,0.12); border-color:var(--orange); color:var(--orange)!important; }
+.sel-loss     { background:rgba(255,77,106,0.12); border-color:var(--red);    color:var(--red)!important; }
+.btn-add { width:100%; padding:13px; border-radius:8px; border:none; background:var(--accent); color:#0d0f14; font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; cursor:pointer; transition:opacity 0.15s,transform 0.1s; }
+.btn-add:active { transform:scale(0.98); opacity:0.85; }
+
+/* HISTORY */
+.history-header { display:flex; align-items:center; margin:24px 20px 12px; }
+.history-title { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; }
+
+/* SEARCH */
+.search-wrap { margin:0 20px 10px; position:relative; }
+.search-wrap input { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 36px 10px 14px; font-family:'DM Mono',monospace; font-size:13px; color:var(--text); outline:none; transition:border-color 0.2s; -webkit-appearance:none; }
+.search-wrap input:focus { border-color:var(--accent); }
+.search-wrap input::placeholder { color:var(--muted); }
+.search-clear { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; display:none; padding:4px; }
+.search-clear.visible { display:block; }
+
+/* DATE FILTER */
+.date-filter { margin:0 20px 12px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; display:flex; gap:10px; align-items:flex-end; }
+.date-filter .input-group label { font-size:9px; }
+.date-filter input[type="date"] { font-size:13px; padding:8px 10px; }
+.btn-clear-dates { flex-shrink:0; height:38px; padding:0 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.btn-clear-dates.active { border-color:var(--red); color:var(--red); background:rgba(255,77,106,0.08); }
+
+/* FILTER TABS resultado */
+.filter-tabs { display:flex; gap:6px; margin:0 20px 14px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+.filter-tabs::-webkit-scrollbar { display:none; }
+.tab { flex-shrink:0; padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
+.tab.active { border-color:var(--accent); color:var(--accent); background:rgba(200,241,53,0.08); }
+
+/* BET CARDS */
+.bets-list { padding:0 20px; display:flex; flex-direction:column; gap:8px; }
+.bet-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; align-items:center; gap:12px; animation:slideIn 0.2s ease; }
+@keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+.bet-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.dot-win      { background:var(--green);  box-shadow:0 0 6px var(--green); }
+.dot-half-win { background:var(--teal);   box-shadow:0 0 6px var(--teal); }
+.dot-loss     { background:var(--red);    box-shadow:0 0 6px var(--red); }
+.dot-half-loss{ background:var(--orange); box-shadow:0 0 6px var(--orange); }
+.dot-pending  { background:var(--yellow); box-shadow:0 0 6px var(--yellow); }
+.bet-info { flex:1; min-width:0; }
+.bet-desc { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); margin-bottom:3px; }
+.bet-meta { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bet-tags { display:flex; gap:5px; margin-top:4px; flex-wrap:wrap; }
+.tag { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px; padding:2px 7px; border-radius:10px; text-transform:uppercase; }
+.tag-sport { background:rgba(53,212,241,0.1);  color:var(--teal);   border:1px solid rgba(53,212,241,0.2); }
+.tag-casa  { background:rgba(200,241,53,0.08); color:var(--accent); border:1px solid rgba(200,241,53,0.15); }
+.bet-amount { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.5px; flex-shrink:0; }
+.bet-actions { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+.btn-icon { width:30px; height:30px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; transition:all 0.15s; }
+.btn-icon:active { opacity:0.6; }
+.empty { text-align:center; padding:40px 20px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+
+/* MODAL */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:100; align-items:flex-end; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--surface); border-radius:20px 20px 0 0; border:1px solid var(--border); border-bottom:none; padding:24px 20px 40px; width:100%; max-width:480px; animation:slideUp 0.25s ease; max-height:90vh; overflow-y:auto; }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-title { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+.modal-close { background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; }
+.btn-save { width:100%; padding:13px; border-radius:8px; border:none; background:var(--accent); color:#0d0f14; font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; cursor:pointer; margin-top:12px; }
+
+.footer { text-align:center; margin-top:30px; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; color:#2a3045; text-transform:uppercase; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>BET<span>.</span>CALC</h1>
+  <p>Calculadora de apuestas</p>
+</div>
+
+<!-- FILTRO DEPORTE (afecta stats) -->
+<div class="sport-stat-tabs">
+  <button class="sstab active" onclick="setStatSport('all',this)">Todos</button>
+  <button class="sstab" onclick="setStatSport('⚽ Fútbol',this)">⚽ Fútbol</button>
+  <button class="sstab" onclick="setStatSport('🎾 Tenis',this)">🎾 Tenis</button>
+  <button class="sstab" onclick="setStatSport('🏀 Básquet',this)">🏀 Básquet</button>
+  <button class="sstab" onclick="setStatSport('🏒 Hockey',this)">🏒 Hockey</button>
+  <button class="sstab" onclick="setStatSport('🎯 Otro',this)">🎯 Otro</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-val" id="s-total">0</div><div class="stat-label">Apuestas</div></div>
+  <div class="stat"><div class="stat-val green" id="s-won">0</div><div class="stat-label">Ganadas</div></div>
+  <div class="stat"><div class="stat-val red" id="s-lost">0</div><div class="stat-label">Perdidas</div></div>
+  <div class="stat"><div class="stat-val" id="s-pnl">$0</div><div class="stat-label">P&L Neto</div></div>
+</div>
+
+<!-- FORMULARIO -->
+<div class="form-wrap">
+  <div class="form-title">✦ Nueva apuesta</div>
+  <div class="form-row">
+    <div class="input-group">
+      <label>Descripción (opcional)</label>
+      <input type="text" id="f-desc" placeholder="Ej: River gana">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="input-group autocomplete-wrap">
+      <label>Casa de apuesta</label>
+      <input type="text" id="f-casa" placeholder="Ej: Bet365" autocomplete="off"
+        oninput="showAC('f-casa','ac-new')" onfocus="showAC('f-casa','ac-new')" onblur="hideAC('ac-new')">
+      <div class="ac-list" id="ac-new"></div>
+    </div>
+    <div class="input-group">
+      <label>Fecha</label>
+      <input type="date" id="f-date">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="input-group">
+      <label>Deporte</label>
+      <div class="sport-pills" id="sport-pills">
+        <div class="sport-pill active" data-sport="⚽ Fútbol"  onclick="selectSport(this)">⚽ Fútbol</div>
+        <div class="sport-pill"       data-sport="🎾 Tenis"   onclick="selectSport(this)">🎾 Tenis</div>
+        <div class="sport-pill"       data-sport="🏀 Básquet" onclick="selectSport(this)">🏀 Básquet</div>
+        <div class="sport-pill"       data-sport="🏒 Hockey"  onclick="selectSport(this)">🏒 Hockey</div>
+        <div class="sport-pill"       data-sport="🎯 Otro"    onclick="selectSport(this)">🎯 Otro</div>
+      </div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="input-group">
+      <label>Stake ($)</label>
+      <input type="text" id="f-stake" placeholder="0" inputmode="decimal" autocomplete="off">
+    </div>
+    <div class="input-group">
+      <label>Cuota</label>
+      <input type="text" id="f-odds" placeholder="1.00" inputmode="decimal" autocomplete="off">
+    </div>
+  </div>
+  <div class="preview">
+    <span>Retorno potencial</span>
+    <span id="f-preview">$0.00</span>
+  </div>
+  <div class="result-grid">
+    <button class="btn-result sel-win" id="btn-win"       onclick="selectResult('win')">✓ Ganada</button>
+    <button class="btn-result"         id="btn-half-win"  onclick="selectResult('half-win')">½ Ganada</button>
+    <button class="btn-result"         id="btn-pending"   onclick="selectResult('pending')">⏳ Pend.</button>
+    <button class="btn-result"         id="btn-half-loss" onclick="selectResult('half-loss')" style="grid-column:1/2">½ Perdida</button>
+    <button class="btn-result"         id="btn-loss"      onclick="selectResult('loss')"      style="grid-column:2/4">✗ Perdida completa</button>
+  </div>
+  <button class="btn-add" onclick="addBet()">+ AGREGAR APUESTA</button>
+</div>
+
+<!-- HISTORIAL -->
+<div class="history-header">
+  <span class="history-title">Historial</span>
+</div>
+
+<div class="search-wrap">
+  <input type="text" id="f-search" placeholder="Buscar por descripción o casa..." oninput="onSearch()">
+  <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+</div>
+
+<div class="date-filter">
+  <div class="input-group">
+    <label>Desde</label>
+    <input type="date" id="f-from" onchange="render()">
+  </div>
+  <div class="input-group">
+    <label>Hasta</label>
+    <input type="date" id="f-to" onchange="render()">
+  </div>
+  <button class="btn-clear-dates" id="btn-clear" onclick="clearDates()">✕ Limpiar</button>
+</div>
+
+<div class="filter-tabs">
+  <button class="tab active" onclick="setFilter('all',this)">Todas</button>
+  <button class="tab" onclick="setFilter('pending',this)">Pendientes</button>
+  <button class="tab" onclick="setFilter('win',this)">Ganadas</button>
+  <button class="tab" onclick="setFilter('half-win',this)">½ Gan.</button>
+  <button class="tab" onclick="setFilter('half-loss',this)">½ Perd.</button>
+  <button class="tab" onclick="setFilter('loss',this)">Perdidas</button>
+</div>
+
+<div class="bets-list" id="bets-list"></div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>✦ Editar apuesta</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="input-group">
+        <label>Descripción</label>
+        <input type="text" id="e-desc" placeholder="Ej: River gana">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="input-group autocomplete-wrap">
+        <label>Casa de apuesta</label>
+        <input type="text" id="e-casa" placeholder="Ej: Bet365" autocomplete="off"
+          oninput="showAC('e-casa','ac-edit')" onfocus="showAC('e-casa','ac-edit')" onblur="hideAC('ac-edit')">
+        <div class="ac-list" id="ac-edit"></div>
+      </div>
+      <div class="input-group">
+        <label>Fecha</label>
+        <input type="date" id="e-date">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="input-group">
+        <label>Deporte</label>
+        <div class="sport-pills" id="e-sport-pills">
+          <div class="sport-pill active" data-sport="⚽ Fútbol"  onclick="selectEditSport(this)">⚽ Fútbol</div>
+          <div class="sport-pill"        data-sport="🎾 Tenis"   onclick="selectEditSport(this)">🎾 Tenis</div>
+          <div class="sport-pill"        data-sport="🏀 Básquet" onclick="selectEditSport(this)">🏀 Básquet</div>
+          <div class="sport-pill"        data-sport="🏒 Hockey"  onclick="selectEditSport(this)">🏒 Hockey</div>
+          <div class="sport-pill"        data-sport="🎯 Otro"    onclick="selectEditSport(this)">🎯 Otro</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="input-group">
+        <label>Stake ($)</label>
+        <input type="text" id="e-stake" inputmode="decimal" autocomplete="off">
+      </div>
+      <div class="input-group">
+        <label>Cuota</label>
+        <input type="text" id="e-odds" inputmode="decimal" autocomplete="off">
+      </div>
+    </div>
+    <div class="result-grid">
+      <button class="btn-result" id="e-btn-win"       onclick="selectEditResult('win')">✓ Ganada</button>
+      <button class="btn-result" id="e-btn-half-win"  onclick="selectEditResult('half-win')">½ Ganada</button>
+      <button class="btn-result" id="e-btn-pending"   onclick="selectEditResult('pending')">⏳ Pend.</button>
+      <button class="btn-result" id="e-btn-half-loss" onclick="selectEditResult('half-loss')" style="grid-column:1/2">½ Perdida</button>
+      <button class="btn-result" id="e-btn-loss"      onclick="selectEditResult('loss')"      style="grid-column:2/4">✗ Perdida completa</button>
+    </div>
+    <button class="btn-save" onclick="saveEdit()">GUARDAR CAMBIOS</button>
+  </div>
+</div>
+
+<div class="footer">tanogralatto.github.io</div>
+
+<script>
+let bets = JSON.parse(localStorage.getItem('betcalc_bets') || '[]');
+let selectedResult = 'win';
+let editResult     = 'win';
+let selectedSport  = '⚽ Fútbol';
+let editSport      = '⚽ Fútbol';
+let editId         = null;
+let currentFilter  = 'all';
+let currentStatSport = 'all'; // controla stats Y historial
+
+/* ── helpers ── */
+function parseNum(v){ return parseFloat(String(v).replace(',','.')); }
+function save(){ localStorage.setItem('betcalc_bets', JSON.stringify(bets)); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function fmt(n){ return n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}) : new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}); }
+
+document.getElementById('f-date').value = todayStr();
+document.getElementById('f-stake').addEventListener('input', updatePreview);
+document.getElementById('f-odds').addEventListener('input', updatePreview);
+function updatePreview(){
+  const s = parseNum(document.getElementById('f-stake').value)||0;
+  const o = parseNum(document.getElementById('f-odds').value)||1;
+  document.getElementById('f-preview').textContent = '$'+fmt(s*o);
+}
+
+/* ── autocomplete ── */
+function getCasas(){
+  return [...new Set(bets.map(b=>b.casa).filter(Boolean))];
+}
+function showAC(inputId, listId){
+  const val = document.getElementById(inputId).value.trim().toLowerCase();
+  const casas = getCasas().filter(c => !val || c.toLowerCase().includes(val));
+  const list = document.getElementById(listId);
+  if(!casas.length){ list.classList.remove('open'); return; }
+  list.innerHTML = casas.map(c =>
+    `<div class="ac-item" onmousedown="pickAC('${inputId}','${listId}','${c.replace(/'/g,"\\'")}')"> ${c}</div>`
+  ).join('');
+  list.classList.add('open');
+}
+function hideAC(listId){ setTimeout(()=>document.getElementById(listId).classList.remove('open'), 150); }
+function pickAC(inputId, listId, val){
+  document.getElementById(inputId).value = val;
+  document.getElementById(listId).classList.remove('open');
+}
+
+/* ── result selection ── */
+const BTN_IDS = ['win','half-win','pending','half-loss','loss'];
+const SEL_CLS = {win:'sel-win','half-win':'sel-half-win',pending:'sel-pending','half-loss':'sel-half-loss',loss:'sel-loss'};
+function selectResult(r){
+  selectedResult=r;
+  BTN_IDS.forEach(k=> document.getElementById('btn-'+k).className='btn-result'+(k===r?' '+SEL_CLS[k]:''));
+}
+function selectEditResult(r){
+  editResult=r;
+  BTN_IDS.forEach(k=> document.getElementById('e-btn-'+k).className='btn-result'+(k===r?' '+SEL_CLS[k]:''));
+}
+
+/* ── sport selection ── */
+function selectSport(el){
+  document.querySelectorAll('#sport-pills .sport-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  selectedSport = el.dataset.sport;
+}
+function selectEditSport(el){
+  document.querySelectorAll('#e-sport-pills .sport-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  editSport = el.dataset.sport;
+}
+
+/* ── profit calc ── */
+function calcProfit(r,s,o){
+  if(r==='win')       return s*o-s;
+  if(r==='half-win')  return (s/2)*o-(s/2);
+  if(r==='half-loss') return -(s/2);
+  if(r==='loss')      return -s;
+  return 0;
+}
+
+/* ── add bet ── */
+function addBet(){
+  const stake = parseNum(document.getElementById('f-stake').value);
+  const odds  = parseNum(document.getElementById('f-odds').value);
+  const desc  = document.getElementById('f-desc').value.trim();
+  const casa  = document.getElementById('f-casa').value.trim();
+  const dateVal = document.getElementById('f-date').value;
+  if(!stake||stake<=0||!odds||odds<=0){
+    const fw=document.querySelector('.form-wrap');
+    fw.style.animation='none'; fw.offsetHeight; fw.style.animation='shake 0.3s ease';
+    setTimeout(()=>fw.style.animation='',300); return;
+  }
+  bets.unshift({
+    id:Date.now(), desc:desc||'Apuesta', casa:casa||'', sport:selectedSport,
+    stake, odds, result:selectedResult,
+    profit:calcProfit(selectedResult,stake,odds),
+    date:fmtDate(dateVal), dateRaw:dateVal||todayStr()
+  });
+  save(); render();
+  document.getElementById('f-stake').value='';
+  document.getElementById('f-odds').value='';
+  document.getElementById('f-desc').value='';
+  document.getElementById('f-casa').value='';
+  document.getElementById('f-date').value=todayStr();
+  document.getElementById('f-preview').textContent='$0.00';
+  selectResult('win');
+}
+
+/* ── delete / edit ── */
+function deleteBet(id){ bets=bets.filter(b=>b.id!==id); save(); render(); }
+
+function openEdit(id){
+  const b=bets.find(x=>x.id===id); if(!b) return;
+  editId=id;
+  document.getElementById('e-desc').value=b.desc;
+  document.getElementById('e-casa').value=b.casa||'';
+  document.getElementById('e-stake').value=b.stake;
+  document.getElementById('e-odds').value=b.odds;
+  document.getElementById('e-date').value=b.dateRaw||todayStr();
+  const sp=b.sport||'⚽ Fútbol'; editSport=sp;
+  document.querySelectorAll('#e-sport-pills .sport-pill').forEach(p=>p.classList.toggle('active',p.dataset.sport===sp));
+  selectEditResult(b.result);
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); editId=null; }
+document.getElementById('modal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
+
+function saveEdit(){
+  const stake=parseNum(document.getElementById('e-stake').value);
+  const odds=parseNum(document.getElementById('e-odds').value);
+  const desc=document.getElementById('e-desc').value.trim();
+  const casa=document.getElementById('e-casa').value.trim();
+  const dateVal=document.getElementById('e-date').value;
+  if(!stake||stake<=0||!odds||odds<=0) return;
+  bets=bets.map(b=>b.id===editId?{
+    ...b, desc:desc||'Apuesta', casa:casa||'', sport:editSport,
+    stake, odds, result:editResult,
+    profit:calcProfit(editResult,stake,odds),
+    date:fmtDate(dateVal)||b.date, dateRaw:dateVal||b.dateRaw
+  }:b);
+  save(); closeModal(); render();
+}
+
+/* ── filters ── */
+function setStatSport(s,el){
+  currentStatSport=s;
+  document.querySelectorAll('.sport-stat-tabs .sstab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.filter-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); render();
+}
+function onSearch(){
+  const v=document.getElementById('f-search').value;
+  document.getElementById('search-clear').classList.toggle('visible',v.length>0);
+  render();
+}
+function clearSearch(){ document.getElementById('f-search').value=''; document.getElementById('search-clear').classList.remove('visible'); render(); }
+function clearDates(){ document.getElementById('f-from').value=''; document.getElementById('f-to').value=''; document.getElementById('btn-clear').classList.remove('active'); render(); }
+
+/* ── render ── */
+const DOT={'win':'dot-win','half-win':'dot-half-win','loss':'dot-loss','half-loss':'dot-half-loss','pending':'dot-pending'};
+const CLR={'win':'green','half-win':'teal','loss':'red','half-loss':'orange','pending':'yellow'};
+const LBL={'win':'✓ Ganada','half-win':'½ Ganada','loss':'✗ Perdida','half-loss':'½ Perdida','pending':'⏳ Pend.'};
+
+function render(){
+  // Stats: filtradas por deporte seleccionado arriba
+  const statBase = currentStatSport==='all' ? bets : bets.filter(b=>b.sport===currentStatSport);
+  document.getElementById('s-total').textContent = statBase.length;
+  document.getElementById('s-won').textContent   = statBase.filter(b=>b.result==='win'||b.result==='half-win').length;
+  document.getElementById('s-lost').textContent  = statBase.filter(b=>b.result==='loss'||b.result==='half-loss').length;
+  const pnl = statBase.reduce((s,b)=>s+b.profit,0);
+  const pnlEl = document.getElementById('s-pnl');
+  pnlEl.textContent = (pnl>=0?'+$':'-$')+fmt(Math.abs(pnl));
+  pnlEl.className = 'stat-val '+(pnl>0?'green':pnl<0?'red':'');
+
+  // Historial: mismo filtro de deporte + resultado + fechas + búsqueda
+  const fromVal = document.getElementById('f-from').value;
+  const toVal   = document.getElementById('f-to').value;
+  const search  = document.getElementById('f-search').value.trim().toLowerCase();
+  document.getElementById('btn-clear').classList.toggle('active',!!(fromVal||toVal));
+
+  let f = currentStatSport==='all' ? [...bets] : bets.filter(b=>b.sport===currentStatSport);
+  if(currentFilter!=='all') f=f.filter(b=>b.result===currentFilter);
+  if(fromVal) f=f.filter(b=>(b.dateRaw||'')>=fromVal);
+  if(toVal)   f=f.filter(b=>(b.dateRaw||'')<=toVal);
+  if(search)  f=f.filter(b=>
+    b.desc.toLowerCase().includes(search)||
+    (b.casa||'').toLowerCase().includes(search)
+  );
+
+  const list=document.getElementById('bets-list');
+  if(!f.length){ list.innerHTML='<div class="empty">Sin apuestas encontradas</div>'; return; }
+  list.innerHTML=f.map(b=>{
+    const sign=b.profit>0?'+':b.profit<0?'-':'~';
+    const amount=b.result==='pending'?fmt(b.stake*b.odds):fmt(Math.abs(b.profit));
+    const tags=[
+      b.sport?`<span class="tag tag-sport">${b.sport}</span>`:'',
+      b.casa?`<span class="tag tag-casa">${b.casa}</span>`:''
+    ].filter(Boolean).join('');
+    return `
+    <div class="bet-card">
+      <div class="bet-dot ${DOT[b.result]||'dot-pending'}"></div>
+      <div class="bet-info">
+        <div class="bet-desc">${b.desc}</div>
+        <div class="bet-meta">${b.date} · $${fmt(b.stake)} × ${b.odds} · ${LBL[b.result]||''}</div>
+        ${tags?`<div class="bet-tags">${tags}</div>`:''}
+      </div>
+      <div class="bet-amount ${CLR[b.result]||'yellow'}">${sign}$${amount}</div>
+      <div class="bet-actions">
+        <button class="btn-icon" onclick="openEdit(${b.id})">✏️</button>
+        <button class="btn-icon" onclick="deleteBet(${b.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+render();
+</script>
+</body>
+</html>
